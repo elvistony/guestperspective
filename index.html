@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
     <title>Wedding Camera</title>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="style.css">
@@ -15,7 +14,7 @@
 
     <div id="overlay">
         <div class="overlay-card p-4">
-            <div class="wedding-logo mb-3"><i class="bi bi-heart-fill"></i></div>
+            <div class="wedding-logo mb-2"><i class="bi bi-heart-fill"></i></div>
             
             <div id="step-1" class="step">
                 <h4 class="mb-4">Select Language</h4>
@@ -27,94 +26,102 @@
             </div>
 
             <div id="step-2" class="step d-none">
-                <h4 id="txt-welcome" class="mb-2">Wedding Camera</h4>
-                <p id="txt-names" class="names-display mb-4">Sarah & Marc</p>
-                <input type="text" id="guest-name-input" class="form-control bg-dark text-white border-secondary rounded-pill text-center mb-4" placeholder="Your Name">
+                <h4 id="txt-welcome">Wedding Camera</h4>
+                <p class="names-display">Sarah & Marc</p>
+                <input type="text" id="guest-name-input" class="form-control bg-dark text-white border-secondary rounded-pill text-center mt-3 mb-3" placeholder="Your Name">
                 <div class="row g-2">
-                    <div class="col-6">
-                        <button class="btn btn-light w-100 h-100 py-3 rounded-4" onclick="setSource('camera')">
-                            <i class="bi bi-camera-fill d-block mb-1"></i>
-                            <span id="txt-btn-camera">Camera</span>
-                        </button>
-                    </div>
-                    <div class="col-6">
-                        <button class="btn btn-secondary w-100 h-100 py-3 rounded-4" onclick="setSource('gallery')">
-                            <i class="bi bi-images d-block mb-1"></i>
-                            <span id="txt-btn-gallery">Gallery</span>
-                        </button>
-                    </div>
+                    <div class="col-6"><button class="btn btn-light w-100 py-3 rounded-4" onclick="setSource('camera')"><i class="bi bi-camera-fill d-block mb-1 fs-3"></i>Camera</button></div>
+                    <div class="col-6"><button class="btn btn-secondary w-100 py-3 rounded-4" onclick="setSource('gallery')"><i class="bi bi-images d-block mb-1 fs-3"></i>Gallery</button></div>
                 </div>
             </div>
 
             <div id="step-3" class="step d-none">
                 <div id="camera-perm-view" class="d-none">
-                    <i class="bi bi-camera text-primary" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3" id="txt-perm-title">Camera Permission</h5>
-                    <p class="small text-secondary" id="txt-perm-desc">We need access to take photos.</p>
-                    <button class="btn btn-primary rounded-pill w-100" onclick="initCameraMode()">Grant & Start</button>
+                    <i class="bi bi-camera text-primary fs-1"></i>
+                    <h5 class="mt-3">Ready?</h5>
+                    <button class="btn btn-primary rounded-pill w-100 mt-3" onclick="initCameraMode()">Open Camera</button>
                 </div>
                 <div id="gallery-upload-view" class="d-none">
-                    <i class="bi bi-cloud-upload text-success" style="font-size: 3rem;"></i>
-                    <h5 class="mt-3" id="txt-gal-title">Upload from Gallery</h5>
-                    <p class="small text-secondary" id="txt-gal-desc">Select up to 25 photos.</p>
+                    <i class="bi bi-cloud-arrow-up text-success fs-1"></i>
+                    <h5 class="mt-3">Batch Upload</h5>
+                    <p class="small text-secondary" id="gal-status">Select up to 25 photos</p>
                     <input type="file" id="gallery-input" multiple accept="image/*" class="d-none" onchange="handleFileSelect(event)">
-                    <button class="btn btn-success rounded-pill w-100 mb-2" onclick="document.getElementById('gallery-input').click()">Choose Photos</button>
-                    <button id="batch-upload-btn" class="btn btn-light rounded-pill w-100 d-none" onclick="uploadBatch()">Proceed to Upload</button>
+                    <button class="btn btn-success rounded-pill w-100 mb-2" onclick="document.getElementById('gallery-input').click()">Pick Photos</button>
+                    <button id="batch-upload-btn" class="btn btn-light rounded-pill w-100 d-none" onclick="uploadBatch()">
+                        <span id="batch-btn-text">Proceed to Upload</span>
+                        <div class="spinner-border spinner-border-sm d-none" id="batch-loader"></div>
+                    </button>
+                </div>
+                <div id="upload-progress-container" class="d-none mt-3">
+                    <div class="progress bg-dark border border-secondary" style="height: 10px; border-radius: 10px;">
+                        <div id="upload-progress-bar" class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <p class="small text-secondary mt-1" id="upload-status-text">Uploading: 0%</p>
+                </div>
+                <div id="success-overlay" class="d-none">
+                    <div class="success-content p-4 w-100">
+                        <div class="heart-pulse mb-3">
+                            <i class="bi bi-heart-fill"></i>
+                        </div>
+                        <h2 class="fw-bold">All Set!</h2>
+                        <p class="text-secondary">Your memories are safely with Sarah & Marc.</p>
+                        
+                        <hr class="border-secondary opacity-25">
+                        
+                        <h6 class="text-uppercase small tracking-wider mb-3" style="letter-spacing: 2px;">Your Uploaded Roll</h6>
+                        <div id="upload-history-grid" class="history-grid">
+                            </div>
+
+                        <p class="small text-muted mt-4">You have completed your 25-photo roll. Enjoy the wedding!</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div id="app-content" style="display: none;">
-        <div id="camera-container">
+        <div id="camera-viewport" onclick="triggerFocus(event)">
             <video id="video-feed" autoplay playsinline muted></video>
-            <div class="top-controls">
-                <span id="display-guest-name" class="guest-label"></span>
-                <i class="bi bi-chevron-up rotate-icon" onclick="location.reload()"></i>
+            <div id="focus-square"></div>
+            <div class="top-nav">
+                <button class="btn text-white p-0" onclick="toggleTorch()"><i class="bi bi-lightning-fill" id="torch-icon"></i></button>
+                <span id="display-guest-name" class="guest-name"></span>
+                <i class="bi bi-gear" onclick="location.reload()"></i>
             </div>
-            <div class="zoom-container">
-                <div class="zoom-presets">
-                    <button class="zoom-pill rotate-icon active" onclick="setZoom(1, this)">1x</button>
-                    <button class="zoom-pill rotate-icon" onclick="setZoom(1.5, this)">2x</button>
-                </div>
+            <div class="zoom-bar">
+                <button class="z-btn active" onclick="setZoom(1, this)">1x</button>
+                <button class="z-btn" onclick="setZoom(2, this)">2x</button>
             </div>
         </div>
 
-        <div class="bottom-panel">
-            <div class="mode-container">
-                <div class="mode-text rotate-icon" id="txt-mode-photo">PHOTO</div>
-            </div>
-            <div class="shutter-row">
-                <div class="counter-display rotate-icon" id="preview-thumb" onclick="openGallery()">
-                    <div class="count-number" id="count">0</div>
-                    <div class="count-label">/25</div>
+        <div class="action-area">
+            <div class="mode-label" id="txt-mode-photo">PHOTO</div>
+            <div class="shutter-control">
+                <div class="gal-preview" onclick="openGallery()">
+                    <div id="count-num">0</div><div class="small-text">/25</div>
                 </div>
-                <div class="shutter-outer">
-                    <button class="shutter-btn" id="shutter-trigger"></button>
-                    <button class="confirm-btn d-none" id="confirm-photo">
-                        <i class="bi bi-check-lg" id="confirm-icon"></i>
-                        <div class="spinner-border spinner-border-sm d-none" id="upload-spinner"></div>
+                <div class="shutter-box">
+                    <button class="sh-btn" id="shutter-trigger"></button>
+                    <button class="confirm-btn d-none" id="confirm-trigger">
+                        <i class="bi bi-check-lg" id="check-icon"></i>
+                        <div class="spinner-border spinner-border-sm d-none" id="loader"></div>
                     </button>
                 </div>
-                <button class="flip-btn" id="secondary-action">
-                    <i class="bi bi-arrow-repeat rotate-icon" id="flip-icon"></i>
-                    <i class="bi bi-x-lg d-none" id="discard-icon"></i>
-                </button>
+                <button class="flip-btn" id="sec-btn"><i class="bi bi-arrow-repeat" id="flip-icon"></i><i class="bi bi-x-lg d-none" id="discard-icon"></i></button>
             </div>
         </div>
+
+        <div class="remaining-banner"><span id="txt-remaining">25 PHOTOS REMAINING</span></div>
     </div>
 
-    <div id="gallery-overlay" class="gallery-hidden">
-        <div class="gallery-header">
-            <button class="btn text-white" onclick="closeGallery()"><i class="bi bi-x-lg"></i></button>
-            <span class="fw-bold small" id="txt-gallery-title">WEDDING ROLL</span>
-            <div class="d-flex gap-3">
-                <button class="btn text-white p-0" onclick="downloadActive()"><i class="bi bi-download"></i></button>
-                <button class="btn text-white p-0" onclick="shareActive()"><i class="bi bi-share"></i></button>
-            </div>
+    <div id="gallery-overlay" class="gal-hide">
+        <div class="gal-head">
+            <button class="btn text-white" onclick="closeGallery()"><i class="bi bi-chevron-down"></i></button>
+            <span id="txt-gallery-title">WEDDING ROLL</span>
+            <div class="d-flex gap-3"><i class="bi bi-download" onclick="downloadPhoto()"></i><i class="bi bi-share" onclick="sharePhoto()"></i></div>
         </div>
-        <div class="gallery-main-view"><img id="main-gallery-img" src=""></div>
-        <div class="filmstrip-container"><div id="filmstrip-track" class="filmstrip-track"></div></div>
+        <div class="gal-main"><img id="main-view" src=""></div>
+        <div class="filmstrip"><div id="strip-track" class="strip-track"></div></div>
     </div>
 
     <canvas id="capture-canvas" style="display:none;"></canvas>
